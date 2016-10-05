@@ -52,17 +52,30 @@ function main(argv) {
         case "--all-empty":
             var limit = argv[3] || 10;
             //Get all modules that does not have a title
-            db.cypherQuery("MATCH (n:Module) WHERE n.title", function(err, result) {
-                callback(err, result);
-            });    
+            db.cypherQuery("MATCH (n:Module) WHERE NOT exists(n.title) return n LIMIT " + limit, function(err, result) {
+                if(err)
+                    return print(err);
+                
+                //Populate target paths
+                var targetPaths = [];
+                for(var i = 0; i < result.data.length; i++)
+                    targetPaths.push(result.data[i].path);
 
+                //Run crawl
+                crawlNpmPathCollection(targetPaths, function() {
+                    print("DONE");
+                });
+            });
+            break;
 
+        default:
+            crawlNpmPathCollection([argv[2]], function() {
+                print("DONE");
+            });
     }
 
 
-    crawlNpmPathCollection([argv[2]], function() {
-        console.log("DONE");
-    });
+
 
 
 
@@ -130,7 +143,7 @@ function crawlNpmPathCollection(urlCollection, callback) {
             //If error, exit with it
             if(error) {
                 taskCallback(getErrorString(error, 
-                    "Crawl Error with module: '" + path + "': "));
+                    "Crawl Error with module: '" + path + "': "), path);
                 return;
             }
 
@@ -155,7 +168,7 @@ function crawlNpmPathCollection(urlCollection, callback) {
 
         });
 
-    }, 1);
+    }, 3);
 
     //Callback to be called when the wikipages queue are empty
     npmPathQueue.drain = function() {

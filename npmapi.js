@@ -20,11 +20,16 @@ function getNpmModuleData(modulePath, callback) {
 
         var pagePath = modulePath;
         var pageTitle = $('h1.package-name a').html();
+        
+        if(pageTitle == null)
+            return callback("Page not returned. (Maybe wrong path or server error.)");
+
+
         var description = $('p.package-description').html();
 
         var githubAddr;
         var lastPublisher = {
-            publisher: $("li.last-publisher").children('a').attr('href').substr(2),
+            publisher: $("li.last-publisher").children('a').attr('href'),
             date: $("li.last-publisher").children('span').attr('data-date'),
             format: $("li.last-publisher").children('span').attr('data-date-format')
         }
@@ -96,7 +101,7 @@ function getNpmModuleData(modulePath, callback) {
             githubAddr: githubAddr,
             lastPublisher: lastPublisher,
             lastRelease: lastRelease,
-            stats: stats,
+            stats: stats || {},
             dependenciesPaths: dependenciesPaths,
             dependentsPaths: dependentsPaths
         });
